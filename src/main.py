@@ -1,12 +1,18 @@
 # import dataset and make graph
-import os
 import make_graph
+import community
+import metric
 
-def take_input_file(filename):
-    absolute_path = os.path.dirname(__file__)
-    relative_path = filename
-    full_path = os.path.join(absolute_path, relative_path)
+def evaluate_network(dataset):
+    for i in range(1, 5):
+        path = dataset + str(i) + ".csv"
+        G = make_graph.convert_input_to_graph(path)
+        part = community.best_partition(G)
+        communities = {}
+        for key, value in part.items():
+            communities[value] = []
+        for key, value in part.items():
+            communities[value].append(key)
+        print(metric.modularity_metric(G, part), metric.conductance_metric(G, communities), metric.fscore_metric(G,part))
 
-    my_graph_t01 = make_graph.generate_graph(full_path)
-    return my_graph_t01
-
+print(evaluate_network("../dataset/15node/15node_t0"))

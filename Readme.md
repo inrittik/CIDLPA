@@ -6,3 +6,8 @@
 3. Shashank Maurya
 4. Chandrakanta Choudhury
 5. Udit Talukdar
+
+### Dependencies/Packages
+1. networkx
+2. numpy
+3. python-louvain
