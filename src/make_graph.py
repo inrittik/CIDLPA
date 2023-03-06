@@ -2,6 +2,7 @@
 
 import csv
 import networkx as nx
+import numpy as np
 
 def generate_graph(path):
   with open(path, 'r') as file:
