@@ -1,118 +1,261 @@
-import sys
-import networkx as nx
+# Input format : 
+
+
+# No_of_nodes No_of_timstamps
+# Edges_count_for_that_timestamp
+# edge1 edge2
+# .
+# .
+# .
+
+
+
+# Output format :
+
+ 
+# List of Communities
+
+
 import random
+import sys
+from collections import defaultdict
+from typing import List, Tuple, Set
 
 sys.stdin = open('input.txt', 'r')
 sys.stdout = open('output.txt', 'w')
 
+N = 100
+T = 100
+
+adj = [[set() for i in range(N)] for j in range(T)]
+edge = [set() for i in range(T)]
+G = [set() for i in range(T)]
+Label = defaultdict(dict)
+b = {}
+S = [[0.0 for x in range(N)] for i in range(2)]
+
+for i in range(T):
+    b[i] = {}
+    for j in range(N):
+        b[i][j] = {}
+
 n, ts = map(int, input().split())
+r = 0.5
 
-# make graph
-G = nx.Graph()
-G.add_nodes_from(range(n))
+def v_change(t1: int, t2: int) -> Set[int]:
+    s = set()
+    for x in G[t1]:
+        if x not in G[t2]:
+            s.add(x)
+    return s
 
-# data structures used
-label = {}
-belonging_factor = {}
-each_node_strength = {}
-S1 = {}
-S0 = {}
+def find_belonging(i: int, strength: List[float]) -> None:
+    sum_strength = sum(strength)
+    S[1][i] = sum_strength / len(strength)
+    S[0][i] = 1.0 - S[1][i]
 
-# create a 3D dictionary with diagonal 1s
-for i in range(ts):
-    belonging_factor[i] = {}
-    for j in range(n):
-        belonging_factor[i][j] = {}
-        for k in range(n):
-            if j == k:
-                belonging_factor[i][j][k] = 1
-            else:
-                belonging_factor[i][j][k] = 0
+def find_strength(i: int, j: int, t: int) -> float:
+    set_div = 0
+    for x in adj[t][j]:
+        if x != i and x not in adj[t][i]:
+            set_div += 1
+    val = set_div / len(adj[t][j])
+    return val
 
-# print the belonging_factor dictionary
-print(belonging_factor)
+def cal_strength(x: int, neighb: List[int], t: int) -> List[float]:
+    strength = []
+    for i in neighb:
+        val = find_strength(i, x, t)
+        strength.append(val)
+    return strength
 
+def find_nodes(e: Set[Tuple[int, int]]) -> Set[int]:
+    nodes = set()
+    for it in e:
+        x, y = it
+        nodes.add(x)
+        nodes.add(y)
+    return nodes
 
-def strength(i, j):
-    Ci = set(G.neighbors(i))
-    Cj = set(G.neighbors(j))
-    if(abs(len(Cj)) ==  0): return 100
-    strength_ij = abs(len(Cj - Ci)) / abs(len(Cj))
+def get_labels(neighb: List[int]) -> List[int]:
+    labels = []
+    for x in neighb:
+        mx_bf = 0.0
+        mx_label = x
+        for l, bf in Label[x].items():
+            if bf > mx_bf:
+                mx_label = l
+                mx_bf = bf
+        labels.append(mx_label)
+    return labels
+
+def compute_vote(candidateLabels: List[int], neighb: List[int]) -> List[float]:
+    vote = []
+    for i in range(len(candidateLabels)):
+        v = 0.0
+        for j in neighb:
+            sl = candidateLabels[i]
+            if sl in Label[j]:
+                v += S[0][j] * Label[j][sl] + S[1][j] * ((1 - Label[j][sl]) / 3.0)
+        vote.append(v)
+    return vote
+
+def get_maximum_vote(vote: List[float], candidateLabels: List[int]) -> int:
+    mx_vote = 0
+    mx_vote_label = 0
+    for j in range(len(vote)):
+        if vote[j] > mx_vote:
+            mx_vote = vote[j]
+            mx_vote_label = candidateLabels[j]
+    return mx_vote_label
+
+def normalize(x: int, t: int) -> None:
+    remove = []
+    for c, bf in Label[x].items():
+        new_bf = 0
+        for y in adj[t][x]:
+            if c in b[t][y]:
+                new_bf += b[t][y][c]
+        if len(adj[t][x]) == 0 :
+            new_bf = 0
+        else:
+            new_bf /= len(adj[t][x])
+        Label[x][c] = new_bf
+        b[t+1][x][c] = new_bf
+        if new_bf == 0.00:
+            remove.append((x,c))
+    for x,c in remove:
+        Label[x].pop(c)
+        b[t+1][x].pop(c)
+    sum = 0
+    for l, bf in b[t+1][x].items():
+        sum += bf
+    if sum == 0:
+        Label[x][x] = 1
+        b[t+1][x][x] = 1
+    else:
+        add_val = (1.00 - sum) / len(b[t+1][x])
+        for l, bf in b[t+1][x].items():
+            b[t+1][x][l] += add_val
+            Label[x][l] = b[t+1][x][l]       
+   
+def remove_labels(t: int, r: float, set_changedNodes: Set[int]) -> None:
+    global adj, edge, G, Label, b, S
     
-    return strength_ij
-
-def node_strength(x):
-    strength_dict = {}
-    for node in G.nodes:
-        if node == x:
-            strength_dict[node] = 0.0
-            continue
-        strength_dict[node] = strength(x, node)
-    return strength_dict
-
+    for x in set_changedNodes:
+        remove = []
+        sum_bf = 0
+        mx_label = x
+        mx_bf = 0
+        
+        for l, bf in Label[x].items():
+            if bf < r:
+                remove.append(l)
+                del Label[x][l]
+                del b[t+1][x][l]
+                sum_bf += bf
+                if bf > mx_bf:
+                    mx_bf = bf
+                    mx_label = l
+        
+        for l in remove:
+            b[t+1][x].pop(l, None)
+        
+        if not Label[x]:
+            Label[x][mx_label] = 1.00
+            b[t+1][x][mx_label] = 1.00
+        else:
+            val = (1.00 - sum_bf) / len(Label[x])
+            for l in Label[x]:
+                Label[x][l] += val
+                b[t+1][x][l] += val
 
 for t in range(ts) : 
-    
-    #  no of edges in each timestamp
     m = int(input())
-    
-    # add each edge to the graph
-    for _ in range(m) :
+    for i in range(m) : 
         x, y = map(int, input().split())
-        x -= 1
-        y -= 1
-        G.add_edge(x,y)
-    
-    # step 1 - Initialization
-    # assigning a label to each node
-    for i in range(n):
-        label[i] = {}
-        for j in range(n):
-            label[i][j] = 0
+        edge[t].add((x,y))
+        adj[t][x].add(y)
+        adj[t][y].add(x)
+        G[t].add(x)
+        G[t].add(y)
+        if(t == ts - 1) :
+            edge[ts].add((x,y))
+            adj[ts][x].add(y)
+            adj[ts][y].add(x)
+            G[ts].add(x)
+            G[ts].add(y)
+ts = ts + 1
+v = set(G[0])
+for t in range(ts) :
+    # print(v)
+    for element in v : 
+        Label[element][element] = 1
+        b[t][element][element] = 1
+    if t != ts - 1:
+        v = v_change(t + 1, t)
 
-    for i in range(n):
-        label[i][i] = 1
-                
-    # print(label)
+v = set(G[0])
+for t in range(ts):
+    for x in v:
+        neighb = []
+        for i in adj[t][x]:
+            neighb.append(i)
+        strength = cal_strength(x, neighb, t)
+        find_belonging(x, strength)
+    if t != ts-1:
+        v = v_change(t+1, t)
 
-    # //////////////////////
+e = edge[0]
+set_changedNodes = find_nodes(e)
 
-    #step 2 - calculate s1 and s0 for each node
-    for node in G.nodes :
-        each_node_strength[node] = node_strength(node)
-        res = 0
-        for immediate_neighbors in G.neighbors(node):
-            res += each_node_strength[node][immediate_neighbors]
-        S1[node] = res / n
-        S0[node] = 1 - S1[node]
-    # print(each_node_strength)
-    # print(S1)
-    # print(S0)
+for t in range(ts):
+    set_changedNodes = find_nodes(e)
+    Vold = set()
+    if t != ts-1:
+        Vold = v_change(t, t+1)
+    for x in Vold:
+        set_changedNodes.discard(x)
+    for it in range(ts):
+        changedNodes = list(set_changedNodes)
+        random.shuffle(changedNodes)
 
-    #step 3 - 
+        for x in changedNodes:
+            neighb = []
+            for i in adj[t][x]:
+                neighb.append(i)
+            candidateLabels = get_labels(neighb)
+            vote = compute_vote(candidateLabels, neighb)
+            mx_vote_label = get_maximum_vote(vote, candidateLabels)
+            if mx_vote_label not in Label[x]:
+                Label[x][mx_vote_label] = 0
+            normalize(x, t)
 
-    # choosing a random node
-    randomly_chosen_node = random.choice(list(G.nodes()))
-    print(randomly_chosen_node)
-    
-    vote = {}
+        remove_labels(t, r, set_changedNodes)
 
-    for neighbor in G.neighbors(randomly_chosen_node):
-        vote[neighbor] = S0[neighbor] * belonging_factor[t][randomly_chosen_node][neighbor] + S1[neighbor] * ((1 - belonging_factor[t][randomly_chosen_node][neighbor]) / 3)
-    
-    new_label = max(vote, key=lambda k: vote[k])
-    print(new_label)
-    
-    for it in G.neighbors(randomly_chosen_node) :
-        print(label[randomly_chosen_node])
+res = [set() for i in range(n+1)]
+for i in range(n+1):
+    for l, bf in Label[i].items():
+        res[l].add(i)
 
-    for it in G.neighbors(randomly_chosen_node) :
-        label[randomly_chosen_node][it] = new_label
-    
-    for it in G.neighbors(randomly_chosen_node) :
-        print(label[randomly_chosen_node])
+comm_set = []
+for i in range(n+1):
+    if len(res[i]) == 0:
+        continue
+    s = set(res[i])
+    comm_set.append(s)
 
-    # update belonging factor of each label
-    # if belonging factor is below the threshold, remove the label
+communities = []
+for i in range(len(comm_set)):
+    is_subset = False
+    for j in range(len(comm_set)):
+        if i == j:
+            continue
+        if comm_set[i].issubset(comm_set[j]):
+            is_subset = True
+            break
+    if not is_subset:
+        communities.append(comm_set[i])
 
-    
+for s in communities:
+    print(*s)
