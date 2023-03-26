@@ -1,46 +1,55 @@
-# Input format : 
-
-
-# No_of_nodes No_of_timstamps
-# Edges_count_for_that_timestamp
-# edge1 edge2
-# .
-# .
-# .
-
-
-
-# Output format :
-
- 
-# List of Communities
-
-
+# Header imports
 import random
 import sys
 from collections import defaultdict
 from typing import List, Tuple, Set
 
+# Read input from file and write the output to a file
 sys.stdin = open('input.txt', 'r')
 sys.stdout = open('output.txt', 'w')
 
-N = 100
-T = 100
-
-adj = [[set() for i in range(N)] for j in range(T)]
-edge = [set() for i in range(T)]
-G = [set() for i in range(T)]
-Label = defaultdict(dict)
-b = {}
-S = [[0.0 for x in range(N)] for i in range(2)]
-
-for i in range(T):
-    b[i] = {}
-    for j in range(N):
-        b[i][j] = {}
-
+# input : 
+# n - No of Nodes
+# ts - No of timestamps
 n, ts = map(int, input().split())
 r = 0.5
+
+# Data Structures Used :
+
+# adj - adjacency list
+# adj[t] : adjacency list at timestamp t
+adj = [[set() for i in range(n+1)] for j in range(ts + 10)]
+
+# edge - Edge list
+# edge[t] : edge list at time t: {(1,2), (2,3)}
+edge = [set() for i in range(ts + 10)]
+
+# G[t] - Contains nodes at timestamp t
+G = [set() for i in range(ts + 10)]
+
+# Label : Dictionary containing details of labels of community to which a node belongs for a node x
+# Access Method : Label[node] = {labels to which a node belong} with it's belonging factor
+# "label" notice lowercase l denotes community no (like for community 1 : 0, community 2 : 1 etc)
+# where as Label (Uppercase) denotes data structure as mentioned above
+
+Label = defaultdict(dict)
+
+# b - belonging factor
+# Access Method : b[t] : b[t][node][label] = bf
+# at timestamp t, denotes the belonging factor of the selected node to labels belonging (of community)
+#  gives the value of belonging factor of node to that label
+
+b = {}
+
+# S[0] and S[1] tells the ability of node not to be affected or to be affected 
+# by it's neighbour nodes respectively
+S = [[0.0 for x in range(n+1)] for i in range(2)]
+
+# Initialization of belonging factor
+for i in range(ts + 10):
+    b[i] = {}
+    for j in range(n+1):
+        b[i][j] = {}
 
 def v_change(t1: int, t2: int) -> Set[int]:
     s = set()
@@ -137,7 +146,7 @@ def normalize(x: int, t: int) -> None:
         add_val = (1.00 - sum) / len(b[t+1][x])
         for l, bf in b[t+1][x].items():
             b[t+1][x][l] += add_val
-            Label[x][l] = b[t+1][x][l]       
+            Label[x][l] = b[t+1][x][l]          
    
 def remove_labels(t: int, r: float, set_changedNodes: Set[int]) -> None:
     global adj, edge, G, Label, b, S
@@ -169,6 +178,7 @@ def remove_labels(t: int, r: float, set_changedNodes: Set[int]) -> None:
             for l in Label[x]:
                 Label[x][l] += val
                 b[t+1][x][l] += val
+
 
 for t in range(ts) : 
     m = int(input())
