@@ -1,25 +1,10 @@
 # import dataset and make graph
-import make_graph
-import community
-import metric
 import os
 import networkx as nx
-import os
+import metric
+import numpy as np
 
 cur_path = os.path.dirname(__file__)
-
-def evaluate_network(dataset:str):
-    for i in range(1, 5):
-        path = dataset + str(i) + ".csv"
-        G = make_graph.convert_input_to_graph(path)
-        part = community.best_partition(G)
-        communities = {}
-        for key, value in part.items():
-            communities[value] = []
-        for key, value in part.items():
-            communities[value].append(key)
-        print(metric.modularity_metric(G, part), metric.conductance_metric(G, communities), metric.fscore_metric(G,part))
-
 # print(evaluate_network("../dataset/15node/15node_t0"))
 
 inputFile = 'input.txt'
@@ -35,8 +20,13 @@ def execFile(filename):
     with open(os.path.join(filename, 't1.txt'), 'r') as gFile:
         edgelist = [[int(num) for num in line.split()] for line in gFile]
         G = nx.from_edgelist(edgelist)
-        print(G)
+    # print(G.subgraph(data[0]).degree(weight='weight'))
+    adj = nx.to_numpy_array(G)
+    adj_matrix = np.array(adj)
+    return metric.calculate_modularity(adj_matrix, data)
 
-new_path = os.path.join(cur_path, 'dataset', 'demo')
-execFile(new_path)
+def run_cidlpa(datasetName):
+    new_path = os.path.join(cur_path, 'dataset', datasetName)
+    execFile(new_path)
     
+run_cidlpa('demo')
