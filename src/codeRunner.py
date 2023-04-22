@@ -23,10 +23,10 @@ def execFile(filename):
     # print(G.subgraph(data[0]).degree(weight='weight'))
     adj = nx.to_numpy_array(G)
     adj_matrix = np.array(adj)
-    return metric.conductance(G, data)
+    return metric.cut_ratio(G, data)
 
 def run_cidlpa(datasetName):
     new_path = os.path.join(cur_path, 'dataset', datasetName)
     return execFile(new_path)
     
-print(run_cidlpa('rtn'))
+print(run_cidlpa('highschool'))
