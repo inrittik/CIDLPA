@@ -157,7 +157,7 @@ def remove_labels(t: int, r: float, set_changedNodes: Set[int]) -> None:
         mx_label = x
         mx_bf = 0
         
-        for l, bf in Label[x].items():
+        for l, bf in list(Label[x].items()):
             if bf < r:
                 remove.append(l)
                 del Label[x][l]
