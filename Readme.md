@@ -11,3 +11,6 @@
 1. networkx
 2. numpy
 3. python-louvain
+4. scikit-learn
+5. igraph
+6. pycairo

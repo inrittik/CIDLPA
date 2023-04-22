@@ -1,6 +1,3 @@
-import numpy as np
-import os
-import networkx as nx
 from sklearn import metrics
 
 #tested
@@ -62,7 +59,7 @@ def calculate_coverage(graph, communities):
 
 
 
-
+#tested
 def calculate_ari(graph, communities):
    
     # create a dictionary to map nodes to their corresponding community labels
@@ -85,10 +82,7 @@ def calculate_ari(graph, communities):
     return ari_score
 
 
-
-
-import networkx as nx
-
+#tested
 def cut_ratio(graph, communities):
     # Create a dictionary mapping nodes to their community IDs
     community_dict = {}

@@ -91,3 +91,14 @@ def plot_comm(n, path_input, path_result, label):
     plt.show()
     
     return graph
+
+from igraph import *
+
+# Create a random graph with 30 nodes and 0.3 edge probability
+g = Graph.Erdos_Renyi(30, 0.3)
+
+# Find the communities using community_multilevel method
+comms = g.community_multilevel()
+
+# Plot the graph with the communities marked by different colors
+plot(comms, mark_groups=True)
