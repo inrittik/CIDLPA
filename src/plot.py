@@ -42,9 +42,7 @@ def plot_comm( communities_list: list[list[int]], graph: nx.Graph()):
         alpha = 0.5,
         font_weight = "bold",
     )
-
-    font = {"color": "k", "fontsize": 25, "weight": "light"}
-    ax.set_title(label, font)
+    ax.set_title("Plotting of Communities")
     plt.show()
     
     return graph
