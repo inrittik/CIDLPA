@@ -60,6 +60,25 @@ def calculate_coverage(graph, communities):
     return coverage
 
 
+#tested
+def cut_ratio(graph, communities):
+    # Create a dictionary mapping nodes to their community IDs
+    community_dict = {}
+    for i, community in enumerate(communities):
+        for node in community:
+            community_dict[node] = i
+    
+    # Calculate the total number of edges and the number of cut edges
+    total_edges = graph.number_of_edges()
+    cut_edges = 0
+    for edge in graph.edges():
+        if edge[0] in community_dict and edge[1] in community_dict:
+            if community_dict[edge[0]] != community_dict[edge[1]]:
+                cut_edges += 1
+    
+    # Calculate and return the cut ratio
+    return cut_edges / total_edges
+
 
 #tested
 def calculate_ari(graph, communities):
@@ -83,25 +102,6 @@ def calculate_ari(graph, communities):
 
 
 #tested
-def cut_ratio(graph, communities):
-    # Create a dictionary mapping nodes to their community IDs
-    community_dict = {}
-    for i, community in enumerate(communities):
-        for node in community:
-            community_dict[node] = i
-    
-    # Calculate the total number of edges and the number of cut edges
-    total_edges = graph.number_of_edges()
-    cut_edges = 0
-    for edge in graph.edges():
-        if edge[0] in community_dict and edge[1] in community_dict:
-            if community_dict[edge[0]] != community_dict[edge[1]]:
-                cut_edges += 1
-    
-    # Calculate and return the cut ratio
-    return cut_edges / total_edges
-
-
 def calculate_nmi(graph, communities):
     # create a dictionary to map nodes to their corresponding community labels
     node2comm = {}
