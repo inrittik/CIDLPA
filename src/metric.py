@@ -1,4 +1,6 @@
 from sklearn import metrics
+import community
+from sklearn.metrics.cluster import normalized_mutual_info_score
 
 #tested
 def modularity(G, communities):
@@ -67,7 +69,6 @@ def calculate_ari(graph, communities):
     for i, comm in enumerate(communities):
         for node in comm:
             node2comm[node] = i
-
     # generate the label lists
     true_labels = []
     predicted_labels = []
@@ -75,7 +76,6 @@ def calculate_ari(graph, communities):
         if edge[0] in node2comm and edge[1] in node2comm:
             true_labels.append(node2comm[edge[0]])
             predicted_labels.append(node2comm[edge[1]])
-
     # calculate the Adjusted Rand Index (ARI) score
     ari_score = metrics.adjusted_rand_score(true_labels, predicted_labels)
 
@@ -100,3 +100,22 @@ def cut_ratio(graph, communities):
     
     # Calculate and return the cut ratio
     return cut_edges / total_edges
+
+
+def calculate_nmi(graph, communities):
+    # create a dictionary to map nodes to their corresponding community labels
+    node2comm = {}
+    for i, comm in enumerate(communities):
+        for node in comm:
+            node2comm[node] = i
+    # generate the label lists
+    true_labels = []
+    predicted_labels = []
+    for edge in graph.edges():
+        if edge[0] in node2comm and edge[1] in node2comm:
+            true_labels.append(node2comm[edge[0]])
+            predicted_labels.append(node2comm[edge[1]])
+    # calculate the Adjusted Rand Index (ARI) score
+    nmi_score = metrics.normalized_mutual_info_score(true_labels, predicted_labels)
+
+    return nmi_score

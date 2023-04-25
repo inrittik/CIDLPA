@@ -1,2 +1,1 @@
-
-    new_path = os.path.join(cur_path, 'dataset', datasetName)
+500Nodes
