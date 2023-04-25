@@ -31,4 +31,4 @@ def run_cidlpa(datasetName):
     new_path = os.path.join(cur_path, 'dataset', datasetName)
     return execFile(new_path)
     
-run_cidlpa('oregon2')
+run_cidlpa('karate')

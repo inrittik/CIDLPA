@@ -3,6 +3,9 @@ import random
 import sys
 from collections import defaultdict
 from typing import List, Tuple, Set
+import time
+
+start = time.time()
 
 # Read input from file and write the output to a file
 sys.stdin = open('input.txt', 'r')
@@ -51,6 +54,14 @@ for i in range(ts + 10):
     for j in range(n+1):
         b[i][j] = {}
 
+# for i in range(ts):
+#     sum += 1
+
+
+# Helper Functions
+# from line 55 to 195
+
+# Changed vertices list
 def v_change(t1: int, t2: int) -> Set[int]:
     s = set()
     for x in G[t1]:
@@ -58,11 +69,13 @@ def v_change(t1: int, t2: int) -> Set[int]:
             s.add(x)
     return s
 
+# Calculating amount of affectedness and non affectedness for each node
 def find_belonging(i: int, strength: List[float]) -> None:
     sum_strength = sum(strength)
     S[1][i] = sum_strength / len(strength)
     S[0][i] = 1.0 - S[1][i]
 
+# Calculate the strength between node i and node j
 def find_strength(i: int, j: int, t: int) -> float:
     set_div = 0
     for x in adj[t][j]:
@@ -71,6 +84,7 @@ def find_strength(i: int, j: int, t: int) -> float:
     val = set_div / len(adj[t][j])
     return val
 
+# Calculate the strength of a node to it's neighbours
 def cal_strength(x: int, neighb: List[int], t: int) -> List[float]:
     strength = []
     for i in neighb:
@@ -78,6 +92,7 @@ def cal_strength(x: int, neighb: List[int], t: int) -> List[float]:
         strength.append(val)
     return strength
 
+# Find the nodes in the given edge list
 def find_nodes(e: Set[Tuple[int, int]]) -> Set[int]:
     nodes = set()
     for it in e:
@@ -86,6 +101,7 @@ def find_nodes(e: Set[Tuple[int, int]]) -> Set[int]:
         nodes.add(y)
     return nodes
 
+# Get the labels of communities of a list of nodes' neighbours
 def get_labels(neighb: List[int]) -> List[int]:
     labels = []
     for x in neighb:
@@ -98,6 +114,7 @@ def get_labels(neighb: List[int]) -> List[int]:
         labels.append(mx_label)
     return labels
 
+# Compute the vote of the candidate labels for a node
 def compute_vote(candidateLabels: List[int], neighb: List[int]) -> List[float]:
     vote = []
     for i in range(len(candidateLabels)):
@@ -109,6 +126,7 @@ def compute_vote(candidateLabels: List[int], neighb: List[int]) -> List[float]:
         vote.append(v)
     return vote
 
+# Get the Community label having the maximum vote
 def get_maximum_vote(vote: List[float], candidateLabels: List[int]) -> int:
     mx_vote = 0
     mx_vote_label = 0
@@ -118,6 +136,8 @@ def get_maximum_vote(vote: List[float], candidateLabels: List[int]) -> int:
             mx_vote_label = candidateLabels[j]
     return mx_vote_label
 
+# Normalize the function to make it dynamic, update the belonging factors of each label for 
+# each of the node at a given timestamp as needed
 def normalize(x: int, t: int) -> None:
     remove = []
     for c, bf in Label[x].items():
@@ -147,7 +167,8 @@ def normalize(x: int, t: int) -> None:
         for l, bf in b[t+1][x].items():
             b[t+1][x][l] += add_val
             Label[x][l] = b[t+1][x][l]          
-   
+
+# Remove the labels with belonging factor below the threshold value r
 def remove_labels(t: int, r: float, set_changedNodes: Set[int]) -> None:
     global adj, edge, G, Label, b, S
     
@@ -179,6 +200,9 @@ def remove_labels(t: int, r: float, set_changedNodes: Set[int]) -> None:
                 Label[x][l] += val
                 b[t+1][x][l] += val
 
+# Main algorithm to detect the communities
+# Store the information about the graph for different timestamps
+
 
 for t in range(ts) : 
     m = int(input())
@@ -196,6 +220,11 @@ for t in range(ts) :
             G[ts].add(x)
             G[ts].add(y)
 ts = ts + 1
+
+# Step 1 : 
+# Initialization 
+# Update the label for each of the node and and intialize it's belonging factor
+# as needed during the different timestamps
 v = set(G[0])
 for t in range(ts) :
     # print(v)
@@ -204,6 +233,10 @@ for t in range(ts) :
         b[t][element][element] = 1
     if t != ts - 1:
         v = v_change(t + 1, t)
+
+# Step 2 : 
+# Calculate the amount of connectedness and non connectedness for each of the node
+# at different timestamps and also update it's belonging factor accordingly as needed
 
 v = set(G[0])
 for t in range(ts):
@@ -216,8 +249,19 @@ for t in range(ts):
     if t != ts-1:
         v = v_change(t+1, t)
 
+# Step 3 : 
+# Normalize it to make it dynamic
+# and update it's belonging factor accordingly and remove the community labels
+# below the threshold value
+
+
+# Get the edge list at initial timestamp
 e = edge[0]
+# Find set of nodes in the timestamp
 set_changedNodes = find_nodes(e)
+
+# normalize and remove labels for each timestamp
+# according to the maximum vote of the neighbours of a node
 
 for t in range(ts):
     set_changedNodes = find_nodes(e)
@@ -243,11 +287,13 @@ for t in range(ts):
 
         remove_labels(t, r, set_changedNodes)
 
+# Store the result in a list according to the label of the community
 res = [set() for i in range(n+1)]
 for i in range(n+1):
     for l, bf in Label[i].items():
         res[l].add(i)
 
+# if for any of label of the community, if empty, leave it or else store it in the list 
 comm_set = []
 for i in range(n+1):
     if len(res[i]) == 0:
@@ -255,6 +301,7 @@ for i in range(n+1):
     s = set(res[i])
     comm_set.append(s)
 
+# Remove the subset communities if present
 communities = []
 for i in range(len(comm_set)):
     is_subset = False
@@ -267,5 +314,6 @@ for i in range(len(comm_set)):
     if not is_subset:
         communities.append(comm_set[i])
 
+#printing the communities
 for s in communities:
     print(*s)
