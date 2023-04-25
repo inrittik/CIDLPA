@@ -1,1 +1,1 @@
-500Nodes
+edge = [set() for i in range(ts + 10)]
