@@ -36,7 +36,7 @@ def execFile(filename):
     nmi = metric.calculate_nmi(G,data)
 
     print("Execution Time: ",end-start)
-    plot.color_communities(G,data) # plotting
+    # plot.color_communities(G,data) # plotting
     return mod,cond,cov,ari,cut_ratio,nmi
 
 # root function to call for executing the algorithm for a given dataset

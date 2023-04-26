@@ -89,12 +89,27 @@ def calculate_ari(graph, communities):
         for node in comm:
             node2comm[node] = i
     # generate the label lists
-    true_labels = []
+    ground_truth = community.best_partition(graph)
     predicted_labels = []
-    for edge in graph.edges():
-        if edge[0] in node2comm and edge[1] in node2comm:
-            true_labels.append(node2comm[edge[0]])
-            predicted_labels.append(node2comm[edge[1]])
+    true_labels = []
+    i = 0
+    for node in node2comm:
+        j = i
+        for node in node2comm:
+            if(i==node):
+                predicted_labels.append(node2comm.get(node))
+                i += 1
+        if(j==i):
+            i += 1
+    i = 0
+    for node in ground_truth:
+        j = i
+        for node in ground_truth:
+            if(i==node):
+                true_labels.append(ground_truth.get(node))
+                i += 1
+        if(j==i):
+            i += 1
     # calculate the Adjusted Rand Index (ARI) score
     ari_score = metrics.adjusted_rand_score(true_labels, predicted_labels)
 
@@ -103,18 +118,34 @@ def calculate_ari(graph, communities):
 
 #tested
 def calculate_nmi(graph, communities):
+    
     # create a dictionary to map nodes to their corresponding community labels
     node2comm = {}
     for i, comm in enumerate(communities):
         for node in comm:
             node2comm[node] = i
     # generate the label lists
-    true_labels = []
+    ground_truth = community.best_partition(graph)
     predicted_labels = []
-    for edge in graph.edges():
-        if edge[0] in node2comm and edge[1] in node2comm:
-            true_labels.append(node2comm[edge[0]])
-            predicted_labels.append(node2comm[edge[1]])
+    true_labels = []
+    i = 0
+    for node in node2comm:
+        j = i
+        for node in node2comm:
+            if(i==node):
+                predicted_labels.append(node2comm.get(node))
+                i += 1
+        if(j==i):
+            i += 1
+    i = 0
+    for node in ground_truth:
+        j = i
+        for node in ground_truth:
+            if(i==node):
+                true_labels.append(ground_truth.get(node))
+                i += 1
+        if(j==i):
+            i += 1
     # calculate the Adjusted Rand Index (ARI) score
     nmi_score = metrics.normalized_mutual_info_score(true_labels, predicted_labels)
 
