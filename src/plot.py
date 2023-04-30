@@ -20,6 +20,6 @@ def color_communities(G,communities):
             intersection = set(communities[j]).intersection(set(community))
             if intersection:
                 G.add_edges_from([(u, v) for u in community for v in communities[j] if u != v])
-    nx.draw(G, with_labels=False, pos=pos,node_color=[colors[node] for node in G.nodes()])
+    nx.draw(G, with_labels=True, pos=pos,node_color=[colors[node] for node in G.nodes()])
     
     plt.show()
